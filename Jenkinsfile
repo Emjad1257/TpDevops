@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    SONAR_TOKEN = 'squ_1ff12c102b3b9c50acdd91aa28d76ba11515b23c'
+    SONAR_TOKEN = 'squ_d8a038b5c0df0e2b895eb490fe5c3c943a588ac4'
     SONAR_HOST_URL = 'http://10.0.2.15:9000'  // IP locale Debian
   }
 
@@ -10,7 +10,7 @@ pipeline {
     stage('Checkout') {
       steps {
         echo "🛎 Clonage du dépôt Symfony DevOps"
-        git url: 'https://github.com/Marouanne13/projet-symfony-devops.git', branch: 'main'
+        git url: 'https://github.com/Emjad1257/TpDevops.git', branch: 'main'
         sh 'ls -la'
       }
     }
