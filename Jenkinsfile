@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     SONAR_TOKEN = 'squ_d8a038b5c0df0e2b895eb490fe5c3c943a588ac4'
-    SONAR_HOST_URL = 'http://172.20.113.236:9000' // Adresse IP locale SonarQube
+    SONAR_HOST_URL = 'http://172.20.113.236:9000'  // Adresse IP SonarQube dans WSL
   }
 
   stages {
@@ -31,7 +31,7 @@ pipeline {
 
     stage('Run PHPUnit & Coverage') {
       steps {
-        echo "🧪 Lancement des tests avec couverture via Xdebug"
+        echo "🧪 Exécution des tests PHPUnit avec couverture (Xdebug)"
         sh '''
           docker run --rm \
             -v $(pwd):/app \
@@ -47,24 +47,20 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        echo "📊 Analyse SonarQube avec le scanner Docker"
-
-        // Cette étape nécessite que tu aies configuré le nom "SonarLocal" dans Jenkins
-        withSonarQubeEnv('SonarLocal') {
-          sh '''
-            docker run --rm \
-              -v $(pwd):/usr/src \
-              -w /usr/src \
-              sonarsource/sonar-scanner-cli:latest \
-              sonar-scanner \
-                -Dsonar.projectKey=symfony-devops \
-                -Dsonar.projectName="Symfony DevOps" \
-                -Dsonar.sources=src \
-                -Dsonar.php.coverage.reportPaths=coverage.xml \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.login=$SONAR_TOKEN
-          '''
-        }
+        echo "📊 Analyse SonarQube sans plugin Jenkins (appel direct Docker)"
+        sh '''
+          docker run --rm \
+            -v $(pwd):/usr/src \
+            -w /usr/src \
+            sonarsource/sonar-scanner-cli:latest \
+            sonar-scanner \
+              -Dsonar.projectKey=symfony-devops \
+              -Dsonar.projectName="Symfony DevOps" \
+              -Dsonar.sources=src \
+              -Dsonar.php.coverage.reportPaths=coverage.xml \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
+        '''
       }
     }
 
