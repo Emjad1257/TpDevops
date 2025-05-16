@@ -5,7 +5,7 @@
   gather_facts: false
 
   vars:
-    compose_file: "{{ playbook_dir }}/../docker-compose.yml"
+    compose_file: "{{ playbook_dir }}/../docker-compose.yaml"
 
   tasks:
     - name: "⬇️  Arrêter et supprimer les anciens conteneurs"
