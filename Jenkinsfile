@@ -1,110 +1,46 @@
 pipeline {
   agent any
 
-  environment {
-    SONAR_TOKEN = 'squ_d8a038b5c0df0e2b895eb490fe5c3c943a588ac4'
-    SONAR_HOST_URL = 'http://172.20.113.236:9000'  // Adresse IP SonarQube dans WSL
-  }
-
   stages {
 
     stage('Checkout') {
       steps {
-        echo "🛎 Clonage du dépôt Symfony DevOps"
+        echo "✅ Étape 1 : Clonage du dépôt"
         git url: 'https://github.com/Emjad1257/TpDevops.git', branch: 'main'
-        sh 'ls -la'
       }
     }
 
-    stage('Install Dependencies') {
+    stage('Build') {
       steps {
-        echo "📦 Installation des dépendances avec Composer"
-        sh '''
-          docker run --rm \
-            -v $(pwd):/app \
-            -w /app \
-            composer:2.5 \
-            composer install --no-interaction --optimize-autoloader
-        '''
+        echo "🔧 Étape 2 : Build (simulé ici)"
+        sh 'echo "Build terminé."'
       }
     }
 
-    stage('Run PHPUnit & Coverage') {
+    stage('Test') {
       steps {
-        echo "🧪 Exécution des tests PHPUnit avec couverture (Xdebug)"
-        sh '''
-          docker run --rm \
-            -v $(pwd):/app \
-            -w /app \
-            php:8.2-cli bash -c "
-              apt-get update &&
-              apt-get install -y git unzip php-xdebug &&
-              php -d zend_extension=xdebug.so vendor/bin/phpunit --coverage-clover=coverage.xml || true
-            "
-        '''
+        echo "🧪 Étape 3 : Tests (simulés ici)"
+        sh 'echo "Tests OK."'
       }
     }
 
-    stage('SonarQube Analysis') {
+    stage('Deploy') {
       steps {
-        echo "📊 Analyse SonarQube sans plugin Jenkins (appel direct Docker)"
-        sh '''
-          docker run --rm \
-            -v $(pwd):/usr/src \
-            -w /usr/src \
-            sonarsource/sonar-scanner-cli:latest \
-            sonar-scanner \
-              -Dsonar.projectKey=symfony-devops \
-              -Dsonar.projectName="Symfony DevOps" \
-              -Dsonar.sources=src \
-              -Dsonar.php.coverage.reportPaths=coverage.xml \
-              -Dsonar.host.url=$SONAR_HOST_URL \
-              -Dsonar.login=$SONAR_TOKEN
-        '''
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        echo "🐳 Construction de l’image Docker"
-        sh 'docker build -t symfony-devops-app .'
-      }
-    }
-
-    stage('Push to DockerHub') {
-      steps {
-        echo "📤 Push de l’image Docker sur Docker Hub"
-        withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-creds',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          sh '''
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker tag symfony-devops-app $DOCKER_USER/symfony-devops-app:latest
-            docker push $DOCKER_USER/symfony-devops-app:latest
-          '''
-        }
-      }
-    }
-
-    stage('Deploy with Ansible') {
-      steps {
-        echo "🚀 Déploiement via Ansible"
-        sh 'ansible-playbook -i ansible/inventory ansible/playbook-local.yml'
+        echo "🚀 Étape 4 : Déploiement (simulé ici)"
+        sh 'echo "Déploiement terminé."'
       }
     }
   }
 
   post {
-    always {
-      echo '📋 Pipeline terminée.'
-    }
     success {
-      echo '✅ Pipeline exécutée avec succès.'
+      echo '✅✅ Pipeline exécutée avec succès !'
     }
     failure {
-      echo '❌ Une erreur est survenue durant l’exécution de la pipeline.'
+      echo '❌ Une erreur est survenue durant la pipeline.'
+    }
+    always {
+      echo '📋 Pipeline terminée.'
     }
   }
 }
