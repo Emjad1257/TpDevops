@@ -3,10 +3,11 @@ pipeline {
 
   environment {
     SONAR_TOKEN = 'squ_d8a038b5c0df0e2b895eb490fe5c3c943a588ac4'
-    SONAR_HOST_URL = 'http://172.20.113.236:9000' // Correct pour ton WSL
+    SONAR_HOST_URL = 'http://172.20.113.236:9000' // Adresse IP locale SonarQube
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         echo "🛎 Clonage du dépôt Symfony DevOps"
@@ -30,13 +31,16 @@ pipeline {
 
     stage('Run PHPUnit & Coverage') {
       steps {
-        echo "🧪 Lancement des tests avec couverture"
+        echo "🧪 Lancement des tests avec couverture via Xdebug"
         sh '''
           docker run --rm \
             -v $(pwd):/app \
             -w /app \
-            php:8.2-cli \
-            sh -c "apt update && apt install -y git unzip && php vendor/bin/phpunit --coverage-clover=coverage.xml || true"
+            php:8.2-cli bash -c "
+              apt-get update &&
+              apt-get install -y git unzip php-xdebug &&
+              php -d zend_extension=xdebug.so vendor/bin/phpunit --coverage-clover=coverage.xml || true
+            "
         '''
       }
     }
@@ -44,6 +48,8 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         echo "📊 Analyse SonarQube avec le scanner Docker"
+
+        // Cette étape nécessite que tu aies configuré le nom "SonarLocal" dans Jenkins
         withSonarQubeEnv('SonarLocal') {
           sh '''
             docker run --rm \
@@ -71,7 +77,7 @@ pipeline {
 
     stage('Push to DockerHub') {
       steps {
-        echo "📤 Push de l’image sur Docker Hub"
+        echo "📤 Push de l’image Docker sur Docker Hub"
         withCredentials([usernamePassword(
           credentialsId: 'dockerhub-creds',
           usernameVariable: 'DOCKER_USER',
