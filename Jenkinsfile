@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     SONAR_TOKEN = 'squ_d8a038b5c0df0e2b895eb490fe5c3c943a588ac4'
-    SONAR_HOST_URL = 'http://10.0.2.15:9000'  // IP locale Debian
+    SONAR_HOST_URL = 'http://172.20.113.236:9000' // Correct pour ton WSL
   }
 
   stages {
@@ -17,13 +17,13 @@ pipeline {
 
     stage('Install Dependencies') {
       steps {
-        echo "📦 Installation des dépendances avec Composer via Docker"
+        echo "📦 Installation des dépendances avec Composer"
         sh '''
           docker run --rm \
             -v $(pwd):/app \
             -w /app \
             composer:2.5 \
-            install --no-interaction --optimize-autoloader
+            composer install --no-interaction --optimize-autoloader
         '''
       }
     }
@@ -32,8 +32,11 @@ pipeline {
       steps {
         echo "🧪 Lancement des tests avec couverture"
         sh '''
-          ./vendor/bin/phpunit --coverage-clover=coverage.xml || echo "❌ PHPUnit a échoué"
-          [ -f coverage.xml ] && echo "✅ coverage.xml trouvé" || echo "⚠️ coverage.xml manquant"
+          docker run --rm \
+            -v $(pwd):/app \
+            -w /app \
+            php:8.2-cli \
+            sh -c "apt update && apt install -y git unzip && php vendor/bin/phpunit --coverage-clover=coverage.xml || true"
         '''
       }
     }
@@ -47,12 +50,12 @@ pipeline {
               -v $(pwd):/usr/src \
               -w /usr/src \
               sonarsource/sonar-scanner-cli:latest \
-              sonar-scanner -X \
+              sonar-scanner \
                 -Dsonar.projectKey=symfony-devops \
                 -Dsonar.projectName="Symfony DevOps" \
                 -Dsonar.sources=src \
                 -Dsonar.php.coverage.reportPaths=coverage.xml \
-                -Dsonar.host.url=http://10.0.2.15:9000 \
+                -Dsonar.host.url=$SONAR_HOST_URL \
                 -Dsonar.login=$SONAR_TOKEN
           '''
         }
